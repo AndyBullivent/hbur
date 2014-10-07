@@ -1,0 +1,52 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+    <div>
+        <table>
+            <tr>
+                <td>
+                    Unmarked Registers Endpoint for Hugh Baird College by Collabco
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Version 1.0
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Build Date: 07/10/2014
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Developer: Andy Bullivent
+                </td>
+            </tr>
+        </table>
+        @*<p>Total: @Session["total"]</p>
+
+        @{
+            var ts = ViewBag.time.ToUniversalTime().ToString("u");
+            string o = string.Format("/Home/Rights?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
+            string f = string.Format("/Home/LecturerUnmarkedRegisters?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash,ViewBag.user);
+            string s = string.Format("/Home/UnmarkedRegistersByDept?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
+            string t = string.Format("/Home/UnmarkedRegistersByLecturer?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
+        }
+
+        <a href="@o">My Rights</a>
+        <a href="@f">Total Unmarked Registers</a>
+        <a href="@s">Unmarked Registers By Dept</a>
+        <a href="@t">Unmarked Registers by Lecturer</a>*@
+    </div>
+</body>
+</html>
