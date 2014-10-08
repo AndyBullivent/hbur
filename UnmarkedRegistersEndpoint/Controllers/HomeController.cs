@@ -14,22 +14,22 @@ namespace UnmarkedRegistersEndpoint.Controllers
         //
         // GET: /Home/
 
-        public ActionResult Index()
+        public ActionResult Index(string id = "MICHAEL.CARNEY")
         {
-            //if (id == "") { return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); }
+            if (id == "") { return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); }
 
-            //using (Models.DBAccess db = Models.DBAccess.Instance)
-            //{
-            //    Session["Me"] = db.LecturerUnmarkedRegisters(id);
-            //    Session["ByDept"] = db.UnmarkedRegistersByDept(id);
-            //    Session["ByLecturer"] = db.UnmarkedRegistersByLecturer(id);
-            //}
+            using (Models.DBAccess db = Models.DBAccess.Instance)
+            {
+                Session["Me"] = db.LecturerUnmarkedRegisters(id);
+                Session["ByDept"] = db.UnmarkedRegistersByDept(id);
+                Session["ByLecturer"] = db.UnmarkedRegistersByLecturer(id);
+            }
 
-            //DateTime dt = DateTime.Now;
-            //AuthString aStr = new AuthString(id, dt , GetSecret());
-            //ViewBag.authStr = aStr;
-            //ViewBag.time = dt;
-            //ViewBag.user = id;
+            DateTime dt = DateTime.Now;
+            AuthString aStr = new AuthString(id, dt , GetSecret());
+            ViewBag.authStr = aStr;
+            ViewBag.time = dt;
+            ViewBag.user = id;
 
             return View();
         }
