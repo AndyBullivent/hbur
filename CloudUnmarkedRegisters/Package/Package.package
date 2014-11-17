@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" dslVersion="1.0.0.0" Id="4d522962-3874-44d5-abf0-c3423eb78a87" solutionId="4d522962-3874-44d5-abf0-c3423eb78a87" resetWebServer="false" sharePointProductVersion="15.0" name="CloudUnmarkedRegisters" xmlns="http://schemas.microsoft.com/VisualStudio/2008/SharePointTools/PackageModel">
-  <features>
-    <featureReference itemId="53849267-e52d-438e-98a3-cc125356aa68" />
-  </features>
-</package>
