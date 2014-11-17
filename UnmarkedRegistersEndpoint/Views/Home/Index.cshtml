@@ -33,18 +33,19 @@
                 </td>
             </tr>
         </table>
-        <p>Total: @Session["total"]</p>
+
 
         @{
             var ts = ViewBag.time.ToUniversalTime().ToString("u");
-            string o = string.Format("/Home/Rights?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
-            string f = string.Format("/Home/LecturerUnmarkedRegisters?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash,ViewBag.user);
-            string s = string.Format("/Home/UnmarkedRegistersByDept?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
-            string t = string.Format("/Home/UnmarkedRegistersByLecturer?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
+            string o = string.Format("/Rights?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
+            string f = string.Format("/LecturerUnmarkedRegisters?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash,ViewBag.user);
+            string s = string.Format("/UnmarkedRegistersByDept?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
+            string t = string.Format("/UnmarkedRegistersByLecturer?id={2}&ts={0}&hash={1}", ts, ViewBag.AuthStr.Hash, ViewBag.user);
         }
 
+        <br/>
         <a href="@o">My Rights</a>
-        <a href="@f">Total Unmarked Registers</a>
+        <a href="@f">My Unmarked Registers</a>
         <a href="@s">Unmarked Registers By Dept</a>
         <a href="@t">Unmarked Registers by Lecturer</a>
     </div>

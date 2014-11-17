@@ -33,6 +33,7 @@ namespace UnmarkedRegistersEndpoint.Models
         const string UNMARKED_REG_GROUP_BY_USER = @"Group by URS.Owner";
         const string UNMARKED_REG_LECTURER_SELECT = @"RegisterNo, RegisterTitle, urs.Date AS Date, SessionDateTime, CollegeLevelName";
         const string UNMARKED_REG_LECTURER_GROUP_BY = "";
+        const string UNMARKED_REG_BY_DEPT = @"select Owner, COUNT(*)  from MD_UnmarkedRegisters where Dept = '{0}' group by Owner";
         #endregion
 
         private SqlCommand _cmd = null;
@@ -150,8 +151,8 @@ namespace UnmarkedRegistersEndpoint.Models
                         Models.UnmarkedRegisters ur = new UnmarkedRegisters();
                         ur.RegisterNo = rdr.GetString(0);
                         ur.RegisterTitle = rdr.GetString(1);
-                        ur.Date = rdr.GetDateTime(2);
-                        ur.SessionDateTime = rdr.GetDateTime(3);
+                        ur.Date = rdr.GetDateTime(2).ToUniversalTime();
+                        ur.SessionDateTime = rdr.GetDateTime(3).ToUniversalTime();
                         ur.CollegeLevelCode = rdr.GetString(4);
                         umrCollection.Add(ur);
                     }
@@ -164,19 +165,15 @@ namespace UnmarkedRegistersEndpoint.Models
             return umrCollection;
         }
 
-        
-
-
-
         /// <summary>
         /// Returns a dictionary of unmarked registers per department
         /// </summary>
         /// <param name="userID">The id of the user as held by the system</param>
         /// <returns>A dictionary of unmarked registers per department</returns>
-        public Dictionary<string, int> UnmarkedRegistersByDept(string userID)
+        public List<Department> UnmarkedRegistersByDept(string userID)
         {
             CheckConn();
-            Dictionary<string, int> dic = new Dictionary<string, int>();
+            List<Department> dic = new List<Department>(); // Need to build this object On Monday
             try
             {
                 _cmd = new SqlCommand(string.Format(UNMARKED_REG_SQL, userID, UNMARKED_REG_GROUP_BY_DEPT_SELECT, UNMARKED_REG_GROUP_BY_DEPT), _conn);
@@ -185,8 +182,25 @@ namespace UnmarkedRegistersEndpoint.Models
 
                     while (rdr.Read())
                     {
-                        dic.Add(rdr.GetString(1), rdr.GetInt32(0));
+                        Department deptartment = new Department();
+                        deptartment.DeptName = rdr.GetString(1);
+                        deptartment.UnmarkedRegisters = rdr.GetInt32(0);
+                        dic.Add(deptartment);                        
                     }
+                }
+
+                foreach (Department d in dic)
+                {
+                    _cmd = new SqlCommand(string.Format(UNMARKED_REG_BY_DEPT, d.DeptName), _conn);
+                    using(SqlDataReader rdr = _cmd.ExecuteReader())
+                    {
+                        Dictionary<string, int> deptContent = new Dictionary<string, int>();
+                        while(rdr.Read())
+                        {
+                            deptContent.Add(rdr.GetString(0),rdr.GetInt32(1));
+                        }
+                        d.Lecturers = deptContent;
+                    }                 
                 }
             }
             catch

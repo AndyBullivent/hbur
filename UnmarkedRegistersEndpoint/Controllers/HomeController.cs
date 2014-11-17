@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using Collabco.Security;
 using System.Web.Script.Serialization;
+using UnmarkedRegistersEndpoint.Models;
 
 
 namespace UnmarkedRegistersEndpoint.Controllers
@@ -13,17 +14,10 @@ namespace UnmarkedRegistersEndpoint.Controllers
     {
         //
         // GET: /Home/
-
         public ActionResult Index(string id = "MICHAEL.CARNEY")
         {
+            
             if (id == "") { return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); }
-
-            using (Models.DBAccess db = Models.DBAccess.Instance)
-            {
-                Session["Me"] = db.LecturerUnmarkedRegisters(id);
-                Session["ByDept"] = db.UnmarkedRegistersByDept(id);
-                Session["ByLecturer"] = db.UnmarkedRegistersByLecturer(id);
-            }
 
             DateTime dt = DateTime.Now;
             AuthString aStr = new AuthString(id, dt , GetSecret());
@@ -33,6 +27,8 @@ namespace UnmarkedRegistersEndpoint.Controllers
 
             return View();
         }
+
+
 
         private string GetSecret()
         {
@@ -98,8 +94,8 @@ namespace UnmarkedRegistersEndpoint.Controllers
                 {
                     urCollection = db.LecturerUnmarkedRegisters(id);
                 }
-                string jStr = new JavaScriptSerializer().Serialize(urCollection);
-                return Json(jStr, JsonRequestBehavior.AllowGet);
+                //string jStr = new JavaScriptSerializer().Serialize(urCollection);
+                return Json(urCollection, JsonRequestBehavior.AllowGet);
             }
             else
             {
@@ -121,7 +117,7 @@ namespace UnmarkedRegistersEndpoint.Controllers
             AuthString authStr = new AuthString(Request.Url.ToString(), GetSecret());
             if (authStr.IsValid(hash))
             {
-                Dictionary<string, int> byDept;
+                List<Department> byDept = null;
                 using (Models.DBAccess db = Models.DBAccess.Instance)
                 {
                     byDept = db.UnmarkedRegistersByDept(id);
