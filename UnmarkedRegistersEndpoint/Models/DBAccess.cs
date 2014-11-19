@@ -40,7 +40,7 @@ namespace UnmarkedRegistersEndpoint.Models
         private SqlConnection _conn = null;
         private static DBAccess _instance = null;
         private string _connStr = string.Empty;
-        private System.Diagnostics.EventLog _applog = new System.Diagnostics.EventLog("Hugh Baird Unmarked Registers App");
+        private System.Diagnostics.EventLog _applog = new System.Diagnostics.EventLog("Application");
         
         // Singleton Pattern
 
@@ -161,7 +161,7 @@ namespace UnmarkedRegistersEndpoint.Models
             }
             catch(Exception e)
             {
-                string error = GetErrorMsg(e);
+                _applog.Source = "Hugh Baird Unmarked Registers App";
                 _applog.WriteEntry("An error occurred in LecturerUnmarkedRegisters:" + GetErrorMsg(e));
                 return null;
             }
@@ -190,6 +190,7 @@ namespace UnmarkedRegistersEndpoint.Models
             try
             {
                 _cmd = new SqlCommand(string.Format(UNMARKED_REG_SQL, userID, UNMARKED_REG_GROUP_BY_DEPT_SELECT, UNMARKED_REG_GROUP_BY_DEPT), _conn);
+                _cmd.CommandTimeout = 90;
                 using (SqlDataReader rdr = _cmd.ExecuteReader())
                 {
 
@@ -205,6 +206,7 @@ namespace UnmarkedRegistersEndpoint.Models
                 foreach (Department d in dic)
                 {
                     _cmd = new SqlCommand(string.Format(UNMARKED_REG_BY_DEPT, d.DeptName), _conn);
+                    _cmd.CommandTimeout = 90;
                     using(SqlDataReader rdr = _cmd.ExecuteReader())
                     {
                         Dictionary<string, int> deptContent = new Dictionary<string, int>();
@@ -230,6 +232,7 @@ namespace UnmarkedRegistersEndpoint.Models
             }
             catch(Exception e)
             {
+                _applog.Source = "Hugh Baird Unmarked Registers App";
                 _applog.WriteEntry("Error occured in UnmarkedRegistersByDept: " + GetErrorMsg(e));
             }
             return dic;
@@ -248,6 +251,7 @@ namespace UnmarkedRegistersEndpoint.Models
             try
             {
                 _cmd = new SqlCommand(string.Format(UNMARKED_REG_SQL, userID, UNMARKED_REG_GROUP_BY_USER_SELECT, UNMARKED_REG_GROUP_BY_USER), _conn);
+                _cmd.CommandTimeout = 90;
                 using (SqlDataReader rdr = _cmd.ExecuteReader())
                 {
                     while (rdr.Read())
@@ -269,6 +273,7 @@ namespace UnmarkedRegistersEndpoint.Models
             }
             catch(Exception e)
             {
+                _applog.Source = "Hugh Baird Unmarked Registers App";
                 _applog.WriteEntry("Error occured in UnmarkedRegistersByLecturer: " + GetErrorMsg(e));
             }
             return dic;
