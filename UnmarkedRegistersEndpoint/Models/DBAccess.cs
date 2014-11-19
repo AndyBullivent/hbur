@@ -40,9 +40,7 @@ namespace UnmarkedRegistersEndpoint.Models
         private SqlConnection _conn = null;
         private static DBAccess _instance = null;
         private string _connStr = string.Empty;
-        private System.Diagnostics.EventLog _applog = new System.Diagnostics.EventLog("Application");
-        
-        // Singleton Pattern
+        private System.Diagnostics.EventLog _applog = new System.Diagnostics.EventLog("Application");        
 
         /// <summary>
         /// An instance of the DBAccess object
@@ -51,19 +49,11 @@ namespace UnmarkedRegistersEndpoint.Models
         {
             get
             {
-                if (_instance == null)
-                {
-                    object o = new object();
-                    lock (o)
-                    {
-                        if (_instance == null)
-                        {
-                            ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
-                            string conStr = settings["hbConnStr"].ConnectionString;
-                            _instance = new DBAccess(conStr);
-                        }
-                    }
-                }
+
+                ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
+                string conStr = settings["hbConnStr"].ConnectionString;
+                _instance = new DBAccess(conStr);
+
                 return _instance;
             }       
         }
