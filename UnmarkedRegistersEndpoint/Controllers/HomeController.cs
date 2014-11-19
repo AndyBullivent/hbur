@@ -62,7 +62,7 @@ namespace UnmarkedRegistersEndpoint.Controllers
             if (authStr.IsValid(hash))
             {
                 int rights = -1;
-                using(Models.DBAccess db = Models.DBAccess.Instance)
+                using(Models.DBAccess db = new DBAccess())
                 {
                     rights = db.Rights(id);
                 }
@@ -93,7 +93,7 @@ namespace UnmarkedRegistersEndpoint.Controllers
             {
                 List<Models.UnmarkedRegisters> urCollection;
                 Models.UnmarkedRegisters umr = new Models.UnmarkedRegisters();
-                using (Models.DBAccess db = Models.DBAccess.Instance)
+                using (Models.DBAccess db = new DBAccess())
                 {
                     urCollection = db.LecturerUnmarkedRegisters(id);
                 }
@@ -121,7 +121,7 @@ namespace UnmarkedRegistersEndpoint.Controllers
             if (authStr.IsValid(hash))
             {
                 List<Department> byDept = null;
-                using (Models.DBAccess db = Models.DBAccess.Instance)
+                using (Models.DBAccess db = new DBAccess())
                 {
                     byDept = db.UnmarkedRegistersByDept(id);
                 }
@@ -149,7 +149,7 @@ namespace UnmarkedRegistersEndpoint.Controllers
             {
 
                 Dictionary<string, int> byOwner;
-                using (Models.DBAccess db = Models.DBAccess.Instance)
+                using (Models.DBAccess db = new DBAccess())
                 {
                     byOwner = db.UnmarkedRegistersByLecturer(id);
                 }

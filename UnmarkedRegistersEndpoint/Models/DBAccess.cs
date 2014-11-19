@@ -38,29 +38,15 @@ namespace UnmarkedRegistersEndpoint.Models
 
         private SqlCommand _cmd = null;
         private SqlConnection _conn = null;
-        private static DBAccess _instance = null;
+        private DBAccess _instance = null;
         private string _connStr = string.Empty;
         private System.Diagnostics.EventLog _applog = new System.Diagnostics.EventLog("Application");        
 
-        /// <summary>
-        /// An instance of the DBAccess object
-        /// </summary>
-        public static DBAccess Instance
+
+        public DBAccess ()
         {
-            get
-            {
-
-                ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
-                string conStr = settings["hbConnStr"].ConnectionString;
-                _instance = new DBAccess(conStr);
-
-                return _instance;
-            }       
-        }
-
-        DBAccess (string connectionString)
-        {
-            _connStr = connectionString;
+            ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
+            _connStr = settings["hbConnStr"].ConnectionString;
             _conn = new SqlConnection(_connStr);
             _conn.Open();
         }
