@@ -22,19 +22,19 @@ namespace UnmarkedRegistersEndpoint
             routes.MapRoute(
                 name: "LecturerUnmarkedRegisters",
                 url: "LecturerUnmarkedRegisters/{id}",
-                defaults: new { controller = "Home", action = "Rights", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "LecturerUnmarkedRegisters", id = UrlParameter.Optional }
             );
 
             routes.MapRoute(
                 name: "UnmarkedRegistersByDept",
                 url: "UnmarkedRegistersByDept/{id}",
-                defaults: new { controller = "Home", action = "Rights", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "UnmarkedRegistersByDept", id = UrlParameter.Optional }
             );
 
             routes.MapRoute(
                 name: "UnmarkedRegistersByLecturer",
                 url: "UnmarkedRegistersByLecturer/{id}",
-                defaults: new { controller = "Home", action = "Rights", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "UnmarkedRegistersByLecturer", id = UrlParameter.Optional }
             );
 
             // catch all

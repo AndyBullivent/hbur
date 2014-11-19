@@ -40,6 +40,7 @@ namespace UnmarkedRegistersEndpoint.Models
         private SqlConnection _conn = null;
         private static DBAccess _instance = null;
         private string _connStr = string.Empty;
+        private System.Diagnostics.EventLog _applog = new System.Diagnostics.EventLog("Hugh Baird Unmarked Registers App");
         
         // Singleton Pattern
 
@@ -149,20 +150,32 @@ namespace UnmarkedRegistersEndpoint.Models
                     while (rdr.Read())
                     {
                         Models.UnmarkedRegisters ur = new UnmarkedRegisters();
-                        ur.RegisterNo = rdr.GetString(0);
-                        ur.RegisterTitle = rdr.GetString(1);
-                        ur.Date = rdr.GetDateTime(2).ToUniversalTime();
-                        ur.SessionDateTime = rdr.GetDateTime(3).ToUniversalTime();
-                        ur.CollegeLevelCode = rdr.GetString(4);
+                        ur.RegisterNo = rdr.IsDBNull(0) ? "":rdr.GetString(0);
+                        ur.RegisterTitle = rdr.IsDBNull(1) ? "" : rdr.GetString(1);
+                        ur.Date = rdr.IsDBNull(2) ? DateTime.MinValue : rdr.GetDateTime(2).ToUniversalTime();
+                        ur.SessionDateTime = rdr.IsDBNull(3) ? DateTime.MinValue : rdr.GetDateTime(3).ToUniversalTime();
+                        ur.CollegeLevelCode = rdr.IsDBNull(4) ? "" : rdr.GetString(4);
                         umrCollection.Add(ur);
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
+                string error = GetErrorMsg(e);
+                _applog.WriteEntry("An error occurred in LecturerUnmarkedRegisters:" + GetErrorMsg(e));
                 return null;
             }
             return umrCollection;
+        }
+
+        private string GetErrorMsg(Exception e)
+        {
+            string result = e.Message;
+            if(e.InnerException != null)
+            {
+                result += ": Inner Ex - " + GetErrorMsg(e.InnerException);
+            }
+            return result;
         }
 
         /// <summary>
@@ -183,8 +196,8 @@ namespace UnmarkedRegistersEndpoint.Models
                     while (rdr.Read())
                     {
                         Department deptartment = new Department();
-                        deptartment.DeptName = rdr.GetString(1);
-                        deptartment.UnmarkedRegisters = rdr.GetInt32(0);
+                        deptartment.DeptName = rdr.IsDBNull(1)? "": rdr.GetString(1);
+                        deptartment.UnmarkedRegisters = rdr.IsDBNull(0)? -1: rdr.GetInt32(0);
                         dic.Add(deptartment);                        
                     }
                 }
@@ -197,15 +210,27 @@ namespace UnmarkedRegistersEndpoint.Models
                         Dictionary<string, int> deptContent = new Dictionary<string, int>();
                         while(rdr.Read())
                         {
-                            deptContent.Add(rdr.GetString(0),rdr.GetInt32(1));
+                            int i = 0;
+                            string s = "";
+                            if (rdr.IsDBNull(1))
+                            {
+                                s = "Error: Count is null!";
+                            }
+                            else
+                            {
+                                i = rdr.GetInt32(1);
+                            }
+                            
+                            s = rdr.IsDBNull(0) ? s : rdr.GetString(0);
+                            deptContent.Add(s,i);
                         }
                         d.Lecturers = deptContent;
                     }                 
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                _applog.WriteEntry("Error occured in UnmarkedRegistersByDept: " + GetErrorMsg(e));
             }
             return dic;
             
@@ -227,13 +252,24 @@ namespace UnmarkedRegistersEndpoint.Models
                 {
                     while (rdr.Read())
                     {
-                        dic.Add(rdr.GetString(1), rdr.GetInt32(0));
+                        string s = "";
+                        int i = 0;
+                        if(rdr.IsDBNull(0))
+                        {
+                            s = "Error: Count is null!";
+                        }
+                        else
+                        {
+                            rdr.GetInt32(0);
+                        }
+                        s = rdr.IsDBNull(1) ? s : rdr.GetString(1);
+                        dic.Add(s, i);
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                _applog.WriteEntry("Error occured in UnmarkedRegistersByLecturer: " + GetErrorMsg(e));
             }
             return dic;
             

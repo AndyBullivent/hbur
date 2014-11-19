@@ -6,15 +6,18 @@ using System.Web.Mvc;
 using Collabco.Security;
 using System.Web.Script.Serialization;
 using UnmarkedRegistersEndpoint.Models;
+using System.Web.Cors;
+using System.Web.Http.Cors;
 
 
 namespace UnmarkedRegistersEndpoint.Controllers
 {
+
     public class HomeController : Controller
     {
         //
         // GET: /Home/ **
-        public ActionResult Index(string id = "MICHAEL.CARNEY")
+        public ActionResult Index(string id = "abraham.lincoln")
         {
             
             if (id == "") { return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); }
