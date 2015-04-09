@@ -10,7 +10,7 @@ namespace UnmarkedRegistersEndpoint.Models
     public class DBAccess:IDisposable
     {
         #region SQL
-        const string UNMARKED_REG_SQL = @"
+        const string UNMARKED_REG_SQL_old = @"
         SELECT {1} 
         FROM 
             [MD_ActiveUsers] AS ACL WITH (NOLOCK), 
@@ -27,6 +27,15 @@ namespace UnmarkedRegistersEndpoint.Models
         AND LOWER(ACL.AccessLevel) = 'all'
         {2}
 ";
+        const string UNMARKED_REG_SQL = @"
+        SELECT {1} 
+        FROM 
+            [MD_ActiveUsers] AS ACL WITH (NOLOCK), 
+            [MD_UnmarkedRegisters] AS URS WITH (NOLOCK)
+        WHERE
+        {0}
+        {2}
+";
         const string UNMARKED_REG_GROUP_BY_DEPT_SELECT = @"count(*) as No_REGISTERS, URS.Dept as DEPARTMENT";
         const string UNMARKED_REG_GROUP_BY_DEPT = @"Group by URS.Dept";
         const string UNMARKED_REG_GROUP_BY_USER_SELECT = @"count(*) as No_REGISTERS, URS.Owner as OWNER";
@@ -34,12 +43,26 @@ namespace UnmarkedRegistersEndpoint.Models
         const string UNMARKED_REG_LECTURER_SELECT = @"RegisterNo, RegisterTitle, urs.Date AS Date, SessionDateTime, CollegeLevelName";
         const string UNMARKED_REG_LECTURER_GROUP_BY = "";
         const string UNMARKED_REG_BY_DEPT = @"select Owner, COUNT(*)  from MD_UnmarkedRegisters where Dept = '{0}' group by Owner";
+        const string RIGHTS_OWN = @"
+            LOWER(ACL.Username) = LOWER('{0}')
+        AND LOWER(ACL.AccessLevel) = 'own'
+        AND LOWER(URS.Owner) = LOWER(ACL.Username)
+";
+        const string RIGHTS_DEPT = @"
+            LOWER(ACL.Username) = LOWER('{0}')
+        AND LOWER(ACL.AccessLevel) = URS.Dept
+";
+
+        const string RIGHTS_ALL = @"
+            LOWER(ACL.Username) = LOWER('{0}')
+        AND LOWER(ACL.AccessLevel) = 'all'
+";
         #endregion
 
         private SqlCommand _cmd = null;
         private SqlConnection _conn = null;
-        private DBAccess _instance = null;
         private string _connStr = string.Empty;
+        private string _rightsStr = string.Empty;
         private System.Diagnostics.EventLog _applog = new System.Diagnostics.EventLog("Application");        
 
 
@@ -85,12 +108,15 @@ namespace UnmarkedRegistersEndpoint.Models
                         {
                             case "own":
                                 rights = 0;
+                                _rightsStr = string.Format(RIGHTS_OWN,id);
                                 break;
                             case "dept":
                                 rights = 1;
+                                _rightsStr = string.Format(RIGHTS_DEPT, id);
                                 break;
                             case "all":
                                 rights = 2;
+                                _rightsStr = string.Format(RIGHTS_ALL, id);
                                 break;
                             default:
                                 rights = -1;
@@ -111,14 +137,16 @@ namespace UnmarkedRegistersEndpoint.Models
         /// </summary>
         /// <param name="userID">The id of the user as held by the system</param>
         /// <returns>An int of the total number of unmarked registers</returns>
-        public List<Models.UnmarkedRegisters> LecturerUnmarkedRegisters (string userID)
+        public List<UnmarkedRegisters> LecturerUnmarkedRegisters (string userID)
         {
+            _applog.Source = "Hugh Baird Unmarked Registers App";
             CheckConn();
+            Rights(userID);
             List<Models.UnmarkedRegisters> umrCollection = new List<UnmarkedRegisters>();
             try
             {
 
-                string sql = string.Format(UNMARKED_REG_SQL, userID, UNMARKED_REG_LECTURER_SELECT, UNMARKED_REG_LECTURER_GROUP_BY);
+                string sql = string.Format(UNMARKED_REG_SQL, _rightsStr, UNMARKED_REG_LECTURER_SELECT, UNMARKED_REG_LECTURER_GROUP_BY);
                 _cmd = new SqlCommand(sql,_conn);
                 using (SqlDataReader rdr = _cmd.ExecuteReader())
                 {
@@ -137,8 +165,7 @@ namespace UnmarkedRegistersEndpoint.Models
             }
             catch(Exception e)
             {
-                _applog.Source = "Hugh Baird Unmarked Registers App";
-                _applog.WriteEntry("An error occurred in LecturerUnmarkedRegisters:" + GetErrorMsg(e));
+                _applog.WriteEntry("An error occurred in LecturerUnmarkedRegisters:" + GetErrorMsg(e), System.Diagnostics.EventLogEntryType.Error);
                 return null;
             }
             return umrCollection;
@@ -161,11 +188,15 @@ namespace UnmarkedRegistersEndpoint.Models
         /// <returns>A dictionary of unmarked registers per department</returns>
         public List<Department> UnmarkedRegistersByDept(string userID)
         {
+            _applog.Source = "Hugh Baird Unmarked Registers App";
             CheckConn();
+            Rights(userID);
             List<Department> dic = new List<Department>(); // Need to build this object On Monday
             try
             {
-                _cmd = new SqlCommand(string.Format(UNMARKED_REG_SQL, userID, UNMARKED_REG_GROUP_BY_DEPT_SELECT, UNMARKED_REG_GROUP_BY_DEPT), _conn);
+                System.Diagnostics.Stopwatch sWatch = new System.Diagnostics.Stopwatch();
+                sWatch.Start();
+                _cmd = new SqlCommand(string.Format(UNMARKED_REG_SQL, _rightsStr, UNMARKED_REG_GROUP_BY_DEPT_SELECT, UNMARKED_REG_GROUP_BY_DEPT), _conn);
                 _cmd.CommandTimeout = 90;
                 using (SqlDataReader rdr = _cmd.ExecuteReader())
                 {
@@ -178,18 +209,61 @@ namespace UnmarkedRegistersEndpoint.Models
                         dic.Add(deptartment);                        
                     }
                 }
+                sWatch.Stop();
 
-                foreach (Department d in dic)
+                _applog.WriteEntry("Time to retrieve depts: " + sWatch.Elapsed.TotalSeconds.ToString(), System.Diagnostics.EventLogEntryType.Information);
+
+                sWatch.Restart();
+                //foreach (Department d in dic)
+                //{
+                //    _cmd = new SqlCommand(string.Format(UNMARKED_REG_BY_DEPT, d.DeptName), _conn);
+                //    _cmd.CommandTimeout = 90;
+                //    using(SqlDataReader rdr = _cmd.ExecuteReader())
+                //    {
+                //        Dictionary<string, int> deptContent = new Dictionary<string, int>();
+                //        while(rdr.Read())
+                //        {
+                //            int i = 0;
+                //            string s = "";
+                //            if (rdr.IsDBNull(1))
+                //            {
+                //                s = "Error: Count is null!";
+                //            }
+                //            else
+                //            {
+                //                i = rdr.GetInt32(1);
+                //            }
+                            
+                //            s = rdr.IsDBNull(0) ? s : rdr.GetString(0);
+                //            deptContent.Add(s,i);
+                //        }
+                //        d.Lecturers = deptContent;
+                //    }                 
+                //}
+
+                // run multiple statements for each department in order
+                string sql = string.Empty;
+                bool loopResult = true;
+
+                //construct multiple select statement
+                for(int idx = 0; idx < dic.Count;idx++) 
                 {
-                    _cmd = new SqlCommand(string.Format(UNMARKED_REG_BY_DEPT, d.DeptName), _conn);
-                    _cmd.CommandTimeout = 90;
-                    using(SqlDataReader rdr = _cmd.ExecuteReader())
+                    sql += string.Format(UNMARKED_REG_BY_DEPT, dic[idx].DeptName) + "; ";
+                }
+                _cmd = new SqlCommand(sql, _conn);
+
+                // get datasets back
+                using(SqlDataReader rdr = _cmd.ExecuteReader())
+                {
+                    int idx = 0;
+                    while (loopResult) // while there are more result sets to get
                     {
                         Dictionary<string, int> deptContent = new Dictionary<string, int>();
-                        while(rdr.Read())
+                        while (rdr.Read())
                         {
                             int i = 0;
                             string s = "";
+
                             if (rdr.IsDBNull(1))
                             {
                                 s = "Error: Count is null!";
@@ -198,18 +272,22 @@ namespace UnmarkedRegistersEndpoint.Models
                             {
                                 i = rdr.GetInt32(1);
                             }
-                            
+
                             s = rdr.IsDBNull(0) ? s : rdr.GetString(0);
-                            deptContent.Add(s,i);
+                            deptContent.Add(s, i);
                         }
-                        d.Lecturers = deptContent;
-                    }                 
+                        dic[idx].Lecturers = deptContent;   // put lecturer data into corresponding department
+                        idx++;                              // next data set
+                        loopResult = rdr.NextResult();
+                    }
                 }
+
+                sWatch.Stop();
+                _applog.WriteEntry("Time to retrieve lecturer data for depts: " + sWatch.Elapsed.TotalSeconds.ToString(), System.Diagnostics.EventLogEntryType.Information);
             }
             catch(Exception e)
             {
-                _applog.Source = "Hugh Baird Unmarked Registers App";
-                _applog.WriteEntry("Error occured in UnmarkedRegistersByDept: " + GetErrorMsg(e));
+                _applog.WriteEntry("Error occured in UnmarkedRegistersByDept: " + GetErrorMsg(e), System.Diagnostics.EventLogEntryType.Error);
             }
             return dic;
             
@@ -222,11 +300,13 @@ namespace UnmarkedRegistersEndpoint.Models
         /// <returns>A dictionary of unmarked registers per lecturer/owner</returns>
         public Dictionary<string, int> UnmarkedRegistersByLecturer(string userID)
         {
+            _applog.Source = "Hugh Baird Unmarked Registers App";
             CheckConn();
+            Rights(userID);
             Dictionary<string, int> dic = new Dictionary<string, int>();
             try
             {
-                _cmd = new SqlCommand(string.Format(UNMARKED_REG_SQL, userID, UNMARKED_REG_GROUP_BY_USER_SELECT, UNMARKED_REG_GROUP_BY_USER), _conn);
+                _cmd = new SqlCommand(string.Format(UNMARKED_REG_SQL, _rightsStr, UNMARKED_REG_GROUP_BY_USER_SELECT, UNMARKED_REG_GROUP_BY_USER), _conn);
                 _cmd.CommandTimeout = 90;
                 using (SqlDataReader rdr = _cmd.ExecuteReader())
                 {
@@ -249,8 +329,7 @@ namespace UnmarkedRegistersEndpoint.Models
             }
             catch(Exception e)
             {
-                _applog.Source = "Hugh Baird Unmarked Registers App";
-                _applog.WriteEntry("Error occured in UnmarkedRegistersByLecturer: " + GetErrorMsg(e));
+                _applog.WriteEntry("Error occured in UnmarkedRegistersByLecturer: " + GetErrorMsg(e), System.Diagnostics.EventLogEntryType.Error);
             }
             return dic;
             

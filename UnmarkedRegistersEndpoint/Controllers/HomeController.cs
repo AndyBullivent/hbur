@@ -17,7 +17,7 @@ namespace UnmarkedRegistersEndpoint.Controllers
     {
         //
         // GET: /Home/ **
-        public ActionResult Index(string id = "abraham.lincoln")
+        public ActionResult Index(string id = "Lynn.Hobbs")
         {
             
             if (id == "") { return new HttpStatusCodeResult(System.Net.HttpStatusCode.BadRequest); }
